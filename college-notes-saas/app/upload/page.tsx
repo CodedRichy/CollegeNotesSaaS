@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 export default function UploadPage() {
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     // Initialize the client component
     const supabase = createClient();
@@ -13,16 +14,18 @@ export default function UploadPage() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             setFile(e.target.files[0]);
+            setMessage(null); // Clear previous messages on new selection
         }
     };
 
     const handleUpload = async () => {
         if (!file) {
-            console.error("No file selected.");
+            setMessage({ type: 'error', text: "No file selected." });
             return;
         }
 
         setIsUploading(true);
+        setMessage(null);
 
         try {
             const timestamp = new Date().getTime();
@@ -33,16 +36,16 @@ export default function UploadPage() {
                 .upload(filename, file);
 
             if (error) {
-                console.error("Error uploading file:", error.message);
+                setMessage({ type: 'error', text: `Error: ${error.message}` });
             } else {
-                console.log("File uploaded successfully:", data);
+                setMessage({ type: 'success', text: "File uploaded successfully!" });
                 // Optionally clear the selection
                 setFile(null);
                 const fileInput = document.getElementById("file-upload") as HTMLInputElement;
                 if (fileInput) fileInput.value = "";
             }
-        } catch (err) {
-            console.error("Unexpected error during upload:", err);
+        } catch (err: any) {
+            setMessage({ type: 'error', text: `Unexpected error: ${err.message || String(err)}` });
         } finally {
             setIsUploading(false);
         }
@@ -75,6 +78,12 @@ export default function UploadPage() {
                     >
                         {isUploading ? "Uploading..." : "Submit"}
                     </button>
+
+                    {message && (
+                        <div className={`p-3 rounded-md text-center font-semibold ${message.type === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'}`}>
+                            {message.text}
+                        </div>
+                    )}
                 </form>
             </div>
         </main>
