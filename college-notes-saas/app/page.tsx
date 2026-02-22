@@ -1,9 +1,14 @@
-export default function Home() {
+import { createClient } from "@/utils/supabase/server";
+
+export default async function Home() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("users_test")
+    .select("*");
+
   return (
     <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-3xl font-bold">
-        DBMS Exam AI — Local Setup Complete
-      </h1>
+      <pre>{JSON.stringify({ data, error }, null, 2)}</pre>
     </main>
   );
 }
